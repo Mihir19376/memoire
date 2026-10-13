@@ -2,68 +2,567 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mémoire</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mémoire Prototype</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-  :root {
-    --bg: #ECE9EF;
-    --fg: #2A2230;
-    --haze-a: #D9CBE3;
-    --haze-b: #E8D9D3;
-    --haze-c: #CFD8E4;
-    --display: "Italiana", "Didot", "Bodoni 72", "Times New Roman", serif;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #17121B; --fg: #EDE6F0;
-      --haze-a: #3A2945; --haze-b: #3B2B2A; --haze-c: #22303F;
-      color-scheme: dark;
-    }
-  }
-  html, body { height: 100%; margin: 0; }
-  body {
-    background: var(--bg);
-    color: var(--fg);
-    display: grid;
-    place-items: center;
-    overflow: hidden;
-    padding-inline: 16px;
-  }
-  .haze { position: fixed; inset: -20%; pointer-events: none; filter: blur(80px); opacity: .9; }
-  .haze span { position: absolute; border-radius: 50%; width: 55vmax; height: 55vmax; }
-  .haze span:nth-child(1) { background: var(--haze-a); top: 10%; left: 5%; animation: drift 26s ease-in-out infinite alternate; }
-  .haze span:nth-child(2) { background: var(--haze-b); top: 35%; left: 40%; animation: drift 32s ease-in-out infinite alternate-reverse; }
-  .haze span:nth-child(3) { background: var(--haze-c); top: 0; left: 50%; animation: drift 38s ease-in-out infinite alternate; }
-  @keyframes drift {
-    from { transform: translate(0, 0) scale(1); }
-    to   { transform: translate(8vmax, 6vmax) scale(1.15); }
-  }
-  h1 {
-    position: relative;
-    margin: 0;
-    font-family: var(--display);
-    font-weight: 400;
-    font-size: clamp(3rem, 13vw, 9rem);
-    letter-spacing: .14em;
-    padding-left: .14em;
-    text-transform: uppercase;
-    text-align: center;
-    animation: arrive 2.4s cubic-bezier(.2,.7,.2,1) both;
-  }
-  @keyframes arrive {
-    from { letter-spacing: .4em; opacity: .25; filter: blur(6px); }
-    to   { letter-spacing: .14em; opacity: 1; filter: blur(0); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .haze span, h1 { animation: none; }
-  }
+/* Layout: a working tool, closer to a lab ledger than a landing page. Rules and type do the separating; boxes only where something is a separate object. */
+:root{
+  --bg:#f7f6f3; --panel:#fdfcfa; --ink:#201e1b; --muted:#6e6961; --line:#dedad2; --soft:#efece6;
+  --accent:#9a6e2f; --accent-ink:#ffffff; --accent-soft:#f1e7d6; --rail:#22201d; --rail-ink:#d6d0c6; --rail-dim:#8c857b;
+  --won:#2d7350; --rej:#a8432c; --ab:#7a6f62; --prog:#2f5d8a; --warn:#94600f; --warn-bg:#f8eedb;
+  --display:"Libre Caslon Display", Georgia, "Times New Roman", serif;
+  --body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#161513; --panel:#1c1b19; --ink:#ebe6de; --muted:#a0998e; --line:#33302c; --soft:#24221f;
+  --accent:#cfa25f; --accent-ink:#1a1612; --accent-soft:#33291c; --rail:#0f0e0d; --rail-ink:#cbc5bb; --rail-dim:#7d776e;
+  --won:#72c39a; --rej:#e78a72; --ab:#b3a99c; --prog:#86b2de; --warn:#e2a752; --warn-bg:#33281a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#161513; --panel:#1c1b19; --ink:#ebe6de; --muted:#a0998e; --line:#33302c; --soft:#24221f;
+  --accent:#cfa25f; --accent-ink:#1a1612; --accent-soft:#33291c; --rail:#0f0e0d; --rail-ink:#cbc5bb; --rail-dim:#7d776e;
+  --won:#72c39a; --rej:#e78a72; --ab:#b3a99c; --prog:#86b2de; --warn:#e2a752; --warn-bg:#33281a; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.55}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:7px 9px}
+.app{display:grid;grid-template-columns:210px 1fr;min-height:100%}
+
+.rail{background:var(--rail);color:var(--rail-ink);padding:22px 14px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh}
+.brand{font-family:var(--display);font-size:24px;letter-spacing:.05em;color:#f3eee6;line-height:1.1}
+.brand span{display:block;font-family:var(--body);font-size:12px;letter-spacing:0;color:var(--rail-dim);margin-top:4px}
+.nav{display:flex;flex-direction:column}
+.nav button{background:none;border:0;text-align:left;padding:8px 10px;color:var(--rail-ink);border-left:2px solid transparent}
+.nav button:hover{color:#fff}
+.nav button[aria-current="true"]{color:#fff;border-left-color:var(--accent)}
+.house{font-size:12px;color:var(--rail-dim);margin-top:auto;line-height:1.5}
+.house b{color:var(--rail-ink);font-weight:500;display:block}
+
+main{padding-block:26px 72px;padding-inline:clamp(16px,4vw,52px);min-width:0}
+.view{max-width:1040px}
+.crumb{font-size:13px;color:var(--muted)}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(26px,3.6vw,34px);line-height:1.15;margin:2px 0 6px;text-wrap:balance}
+h2{font-size:14px;font-weight:600;margin:0}
+.sub{color:var(--muted);max-width:60ch;margin:0}
+.sample-tag{font-size:12px;color:var(--warn)}
+
+/* Brief */
+.brief{margin-top:18px}
+textarea#briefText{width:100%;min-height:104px;resize:vertical;padding:12px 14px;line-height:1.55;font-size:15px}
+.fields{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:end;margin-top:10px}
+.fields label{display:grid;gap:3px;font-size:12px;color:var(--muted)}
+.fields input{width:110px;font-family:var(--mono);font-size:13px}
+.fields .auto{font-size:11px;color:var(--muted)}
+.go{margin-left:auto;display:flex;gap:12px;align-items:center}
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:3px;padding:9px 16px;font-weight:600}
+.btn:hover{filter:brightness(1.07)}
+.btn.quiet{background:none;color:var(--ink);border:1px solid var(--line);font-weight:500}
+.link{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.others{font-size:12px;color:var(--muted);margin-top:10px}
+.others .link{font-size:12px;margin-left:8px}
+.status{color:var(--muted);font-size:13px;margin-top:22px}
+
+/* Precedent ledger */
+.ledger-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:30px;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.ledger-head p{margin:0;font-size:12px;color:var(--muted)}
+.row{border-bottom:1px solid var(--line)}
+.row-top{display:grid;grid-template-columns:48px minmax(0,1fr) auto 20px;gap:14px;align-items:baseline;width:100%;background:none;border:0;text-align:left;padding:12px 0}
+.row-top:hover .pname{text-decoration:underline;text-underline-offset:3px}
+.score{font-family:var(--mono);font-size:18px;font-variant-numeric:tabular-nums}
+.pname{font-weight:600}
+.pmeta{color:var(--muted);font-size:12px}
+.oc{font-size:12px;font-weight:600}
+.oc.won{color:var(--won)} .oc.rejected{color:var(--rej)} .oc.abandoned{color:var(--ab)} .oc.progress{color:var(--prog)}
+.caret{color:var(--muted);font-family:var(--mono);font-size:12px}
+.row-body{padding:0 0 16px 62px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:24px}
+.row-body p{margin:0 0 8px;max-width:64ch}
+.matched{font-size:12px;color:var(--muted)}
+.matched em{font-style:normal;color:var(--ink);background:var(--accent-soft);padding:0 3px}
+.vers{list-style:none;padding:0;margin:0;font-size:12px}
+.vers li{display:grid;grid-template-columns:28px 1fr;gap:6px;padding:3px 0}
+.vers .v{font-family:var(--mono);color:var(--accent)}
+.vers .n{color:var(--muted)}
+.srcs{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px}
+.src{background:none;border:0;padding:0;font-family:var(--mono);font-size:11.5px;color:var(--muted);text-decoration:underline dotted;text-underline-offset:3px}
+.src:hover{color:var(--accent)}
+
+/* Directions */
+.dir-wrap{margin-top:34px;display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:28px;align-items:start}
+.primary{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:20px 22px}
+.primary h3{font-family:var(--display);font-weight:400;font-size:24px;margin:2px 0 6px;line-height:1.2}
+.primary .from{font-size:12px;color:var(--muted)}
+table.delta{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px}
+table.delta th{font-size:11px;color:var(--muted);font-weight:500;text-align:right;padding:4px 0 6px 12px;border-bottom:1px solid var(--line)}
+table.delta th:first-child{text-align:left;padding-left:0}
+table.delta td{padding:6px 0 6px 12px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+table.delta td:first-child{text-align:left;font-family:var(--body);padding-left:0}
+.up{color:var(--won)} .down{color:var(--rej)} .same{color:var(--muted)}
+tr.removed td{text-decoration:line-through;color:var(--muted)}
+.flags{margin:14px 0 0;padding:10px 12px;background:var(--warn-bg);color:var(--warn);font-size:12.5px;border-radius:3px;list-style:none}
+.flags li+li{margin-top:4px}
+.clear{margin-top:14px;font-size:12.5px;color:var(--won)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
+.setaside{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;font-size:13px}
+.alts h2{margin-bottom:4px}
+.alts p.hint{font-size:12px;color:var(--muted);margin:0 0 10px}
+.alt{padding:12px 0;border-top:1px solid var(--line)}
+.alt b{font-weight:600;display:block}
+.alt span{font-size:12px;color:var(--muted);display:block;margin:2px 0 6px}
+.aside-note{font-size:12px;color:var(--muted);padding:12px 0;border-top:1px solid var(--line)}
+
+/* Archive */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 0}
+.toolbar input{flex:1;min-width:180px}
+.tablewrap{overflow-x:auto;margin-top:14px}
+table.arch{width:100%;border-collapse:collapse;min-width:620px}
+table.arch th{font-size:12px;color:var(--muted);text-align:left;padding:8px 12px 8px 0;border-bottom:1px solid var(--ink);font-weight:500}
+table.arch td{padding:11px 12px 11px 0;border-bottom:1px solid var(--line);vertical-align:top}
+table.arch tbody tr{cursor:pointer}
+table.arch tbody tr:hover td{background:var(--soft)}
+table.arch tr.sel td{background:var(--accent-soft)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13px}
+.detail{margin-top:26px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:32px;padding-top:20px;border-top:1px solid var(--line)}
+table.f{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+table.f td{padding:5px 0;border-bottom:1px solid var(--line)}
+table.f td:last-child{text-align:right;font-family:var(--mono);color:var(--muted)}
+.ifra{font-size:10.5px;color:var(--rej);border:1px solid currentColor;border-radius:2px;padding:0 4px;margin-left:6px}
+
+/* Ingest */
+.drop{margin-top:20px;border:1px dashed var(--muted);border-radius:4px;padding:22px;background:var(--panel);display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop p{margin:0;max-width:52ch}
+.files{margin-top:18px}
+.frow{display:grid;grid-template-columns:minmax(0,1.2fr) 80px minmax(0,1.4fr);gap:14px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;align-items:baseline}
+.frow .fn{font-family:var(--mono);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frow .st{color:var(--muted);font-size:12px}
+.frow .st.done{color:var(--won)}
+.frow .out{color:var(--muted);font-size:12px}
+.summary{margin:20px 0 0;max-width:64ch}
+.review{margin-top:14px}
+.ritem{padding:12px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center}
+.ritem p{margin:0}
+.ritem .q{font-size:12px;color:var(--muted);margin-top:2px}
+.ritem .done{font-size:12px;color:var(--won)}
+
+/* Learn */
+.cap{margin-top:20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:36px}
+.form{display:grid;gap:12px;align-content:start}
+.form label{font-size:12px;color:var(--muted);display:grid;gap:4px}
+.form input,.form select,.form textarea{width:100%}
+.form .btn{justify-self:start}
+
+/* Drawer */
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(420px,100%);background:var(--panel);border-left:1px solid var(--line);box-shadow:-10px 0 30px rgba(0,0,0,.1);padding:calc(22px + env(safe-area-inset-top,0px)) 22px 22px;transform:translateX(100%);transition:transform .22s ease;z-index:20;overflow-y:auto;visibility:hidden}
+.drawer.open{transform:none;visibility:visible}
+.drawer .top{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.drawer pre{white-space:pre-wrap;font-family:var(--mono);font-size:12px;background:var(--bg);border:1px solid var(--line);border-radius:3px;padding:14px;line-height:1.65;margin-top:14px}
+mark{background:var(--accent-soft);color:var(--ink);padding:0 2px}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:3px;font-size:13px;z-index:30;max-width:calc(100% - 32px)}
+
+@media (max-width:900px){.dir-wrap,.detail,.cap{grid-template-columns:1fr}.row-body{grid-template-columns:1fr}}
+@media (max-width:720px){
+  .app{grid-template-columns:1fr}
+  .rail{position:static;height:auto;padding:14px 16px;gap:10px;flex-direction:row;flex-wrap:wrap;align-items:center}
+  .brand span,.house{display:none}
+  .nav{flex-direction:row;flex-wrap:wrap;width:100%}
+  .nav button{border-left:0;border-bottom:2px solid transparent;padding:6px 10px}
+  .nav button[aria-current="true"]{border-bottom-color:var(--accent)}
+  .row-top{grid-template-columns:40px minmax(0,1fr) 16px}
+  .row-top .oc{grid-column:2;grid-row:2}
+  .row-body{padding-left:0}
+  .go{margin-left:0;width:100%}
+  .frow{grid-template-columns:1fr auto}
+  .frow .out{grid-column:1/-1}
+  .ritem{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
+<style>body{margin:0}[hidden]{display:none!important}</style>
 </head>
 <body>
-<div class="haze" aria-hidden="true"><span></span><span></span><span></span></div>
-<h1>Mémoire</h1>
+
+<div class="app">
+  <aside class="rail">
+    <div class="brand">MÉMOIRE<span>Every formula remembered</span></div>
+    <nav class="nav" aria-label="Sections">
+      <button data-view="recall" aria-current="true">New brief</button>
+      <button data-view="archive">Archive</button>
+      <button data-view="ingest">Add records</button>
+      <button data-view="capture">Log a version</button>
+    </nav>
+    <div class="house"><b>Kōwhai Fragrance House</b>Sample archive for this prototype. The house, clients and formulas are made up.</div>
+  </aside>
+
+  <main>
+    <!-- RECALL -->
+    <section class="view" id="v-recall">
+      <h1>What have we made like this before?</h1>
+      <p class="sub">Paste the brief as the client sent it. Check what Mémoire picked out, then search the archive.</p>
+
+      <div class="brief">
+        <textarea id="briefText" aria-label="Client brief">Fresh, premium, slightly woody body wash for a mid-market Australian brand. Clean citrus opening, soft woody dry-down that doesn't turn heavy. Cost target NZ$38/kg. Launching in Australia, spring 2027.</textarea>
+        <div class="fields">
+          <label for="fApp2">Application<select id="fApp2"></select></label>
+          <label for="fMarket">Market<select id="fMarket"><option value="">Not stated</option><option>Australia</option><option>New Zealand</option></select></label>
+          <label for="fCost">Cost target, NZ$/kg<input id="fCost" inputmode="decimal" placeholder="none"></label>
+          <span class="auto" id="autoNote">Read from the brief. Change anything that's wrong.</span>
+          <div class="go"><button class="btn" id="runRecall">Search archive</button></div>
+        </div>
+        <div class="others">Other sample briefs:<button class="link" data-sample="0">winter candle</button><button class="link" data-sample="1">salon shampoo</button><button class="link" data-sample="2">private commission</button></div>
+      </div>
+
+      <div id="results"></div>
+    </section>
+
+    <!-- ARCHIVE -->
+    <section class="view" id="v-archive" hidden>
+      <h1>Archive</h1>
+      <p class="sub" id="archSub"></p>
+      <div class="toolbar">
+        <input id="q" type="search" placeholder="Search briefs, notes, client names or materials" aria-label="Search archive">
+        <select id="fOutcome" aria-label="Filter by outcome"><option value="">Any outcome</option><option value="won">Won</option><option value="rejected">Rejected</option><option value="abandoned">Abandoned</option><option value="progress">In progress</option></select>
+        <select id="fApp" aria-label="Filter by application"><option value="">Any application</option></select>
+      </div>
+      <div class="tablewrap"><table class="arch">
+        <thead><tr><th>Project</th><th>Application</th><th>Year</th><th>NZ$/kg</th><th>Versions</th><th>Outcome</th></tr></thead>
+        <tbody id="archBody"></tbody>
+      </table></div>
+      <div id="archDetail"></div>
+    </section>
+
+    <!-- INGEST -->
+    <section class="view" id="v-ingest" hidden>
+      <h1>Add records</h1>
+      <p class="sub">Formula exports, costing sheets, evaluation notes and client emails all go in here. Mémoire works out which project each record belongs to and asks when it isn't sure.</p>
+      <div class="drop" id="drop">
+        <p>Drag files here, or <label class="link" for="fileIn" style="cursor:pointer">choose them</label>. They stay in this house's private copy of Mémoire.</p>
+        <input type="file" id="fileIn" multiple hidden>
+        <button class="btn quiet" id="sampleIngest">Load Kōwhai's sample files</button>
+      </div>
+      <div class="files" id="ingestList"></div>
+      <div id="ingestResult"></div>
+    </section>
+
+    <!-- CAPTURE -->
+    <section class="view" id="v-capture" hidden>
+      <h1>Log a version</h1>
+      <p class="sub">Record what changed and what the client said while it's fresh. Next time a similar brief comes in, this is what it'll find.</p>
+      <div class="cap">
+        <form class="form" id="capForm">
+          <label for="capProj">Project<select id="capProj"></select></label>
+          <label for="capChange">What changed<input id="capChange" value="Iso E Super down to 8%, cashmeran in at 1.5% for a softer finish"></label>
+          <label for="capClient">What the client said<textarea id="capClient" rows="3">Opening is right. Still a bit dense on skin after about four hours.</textarea></label>
+          <label for="capCost">Cost, NZ$/kg<input id="capCost" inputmode="decimal" value="36.5"></label>
+          <button class="btn" type="submit">Save version</button>
+        </form>
+        <div>
+          <h2 id="capTitle"></h2>
+          <ol class="vers" id="capTimeline" style="margin-top:10px;font-size:13px"></ol>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<aside class="drawer" id="drawer" aria-label="Source record" aria-hidden="true">
+  <div class="top"><div><div class="num" id="dTitle"></div><div class="pmeta" id="dMeta"></div></div><button class="btn quiet" id="closeDrawer">Close</button></div>
+  <pre id="dBody"></pre>
+</aside>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+const SAMPLES=[
+ "Vanilla candle for a Wellington homeware shop. Warm and toasted with a bit of smoke, not too sweet. Cost target NZ$55/kg. NZ market, out by June.",
+ "Green, herbal shampoo for an Australian salon chain. Cut grass and fig leaf, should feel natural. Cost target NZ$30/kg. Launching in Australia.",
+ "Private commission, eau de parfum. Soft white florals, slightly powdery. She wants it to remind her of her grandmother's garden without smelling old-fashioned."
+];
+const P=[
+ {id:"KFH-2023-041",name:"Driftwood Citrus",client:"Coastline Body Co.",year:2023,app:"body wash",market:"Australia",cost:36,outcome:"won",
+  keys:["fresh","citrus","woody","bergamot","grapefruit","clean","premium","body wash","dry-down","mid-market","soft","spring"],
+  reason:"Client took v4. At v2 the cedar took over after four hours on skin and they called it heavy, so it came down to 4% and a little ambroxan went in to lift the base.",
+  formula:[["Bergamot FCF",8],["Grapefruit base",6],["Hedione",14],["Iso E Super",10],["Ambroxan",1.5],["Cedarwood Virginia",4]],
+  versions:[["v1","Citrus top, vetiver heart","Too sharp, wanted more warmth"],["v2","Cedarwood up to 9%","Heavy after four hours"],["v3","Cedar to 6%, added cashmeran","Better, but NZ$41/kg"],["v4","Cedar 4%, ambroxan 1.5%, cashmeran out","Approved. Launched in AU, March 2024"]],
+  src:[["KFH041_v4.xlsx","Formula export, 2 Nov 2023","Bergamot FCF      8.0\nGrapefruit base   6.0\nHedione          14.0\nIso E Super      10.0\nAmbroxan          1.5\nCedarwood Virg.   4.0\n...\nCost/kg  NZ$36.10"],["coastline_2023-11-02.eml","Email from Coastline Body Co.","Hi all, v4 is the one. Opening's bright and it still smells clean on skin at the end of the day, which v2 didn't. <mark>Happy to go ahead for the spring range.</mark>"],["eval_041.pdf","Evaluation notes, Oct 2023","4h skin: v2 <mark>cedar dominant, reads heavy</mark>. v4 balanced. Ambrox lifts base without weight."]]},
+ {id:"KFH-2022-017",name:"Salt & Vetiver",client:"Harbour Goods",year:2022,app:"body wash",market:"New Zealand",cost:44,outcome:"rejected",
+  keys:["woody","vetiver","salty","marine","premium","body wash","heavy","fresh","dry-down"],
+  reason:"Lost at the final round. Harbour Goods said it leaned heavy and masculine for a unisex range, and it was NZ$6/kg over their target.",
+  formula:[["Vetiver Haiti",6],["Calone",0.8],["Iso E Super",12],["Patchouli",3],["Lyral (HICC)",2]],
+  versions:[["v1","Marine top, vetiver base","Promising"],["v2","More vetiver and patchouli","Too heavy, over budget"]],
+  src:[["harbour_2022-06-14.eml","Email from Harbour Goods","Thanks for v2. The team felt it <mark>leans heavy and quite masculine</mark> for a unisex line, and we're over budget. We'll pass this time."],["KFH017_v2.csv","Formula export, Jun 2022","Vetiver Haiti,6.0\nCalone,0.8\nIso E Super,12.0\nPatchouli,3.0\n<mark>Lyral,2.0</mark>"]]},
+ {id:"KFH-2024-008",name:"Yuzu Linen",client:"Bloom Laundry",year:2024,app:"laundry liquid",market:"Australia",cost:22,outcome:"won",
+  keys:["fresh","citrus","clean","yuzu","linen","musk","laundry","light"],
+  reason:"Approved on the first round. The musk held up in wash testing and Bloom came back for a second product.",
+  formula:[["Yuzu base",7],["Lemon",5],["Galaxolide",18],["Habanolide",4],["Dihydromyrcenol",9]],
+  versions:[["v1","Yuzu over a clean musk","Approved first round"]],
+  src:[["washtest_008.pdf","Lab results, Feb 2024","Dry fabric 24h: <mark>musk still clearly present</mark>. Citrus gone by 2h, as expected."]]},
+ {id:"KFH-2021-033",name:"Garden at Dusk",client:"Private client (M.)",year:2021,app:"eau de parfum",market:"New Zealand",cost:180,outcome:"won",
+  keys:["floral","white","jasmine","powdery","private","commission","grandmother","garden","eau de parfum","soft","orris","old-fashioned"],
+  reason:"First draft was too powdery and she said it smelled like an old lady's perfume. Heliotropin came down to 2% and it worked.",
+  formula:[["Jasmine absolute",3],["Hedione HC",12],["Orris butter",0.4],["Heliotropin",2],["Ambrette",1]],
+  versions:[["v1","White floral, heliotropin 5%","Too powdery, too old"],["v2","Heliotropin 2%, Hedione HC up","Approved"]],
+  src:[["consult_M_2021.docx","Consultation notes, Mar 2021","Wants her mother's garden after rain. Said clearly: <mark>not an old lady's perfume</mark>. Keep powder light."]]},
+ {id:"KFH-2023-012",name:"Toasted Kauri",client:"Ember & Co.",year:2023,app:"candle",market:"New Zealand",cost:58,outcome:"won",
+  keys:["vanilla","smoke","smoky","toasted","warm","candle","woody","winter","sweet","wellington"],
+  reason:"v1 was too sweet, like a bakery. Ethyl maltol came down to 1% and a trace of birch tar gave the toasted edge Ember wanted.",
+  formula:[["Vanillin",6],["Ethyl maltol",1],["Birch tar",0.2],["Cashmeran",3],["Sandalwood base",8]],
+  versions:[["v1","Vanilla-heavy, ethyl maltol 3%","Too sweet"],["v2","Ethyl maltol 1%, birch tar trace","Approved for winter 2023"]],
+  src:[["ember_brief.pdf","Brief from Ember & Co.","Warm and cosy but <mark>not a cupcake</mark>. Wood smoke on a cold night."]]},
+ {id:"KFH-2024-021",name:"Fig Leaf Clean",client:"Verde Salon",year:2024,app:"shampoo",market:"Australia",cost:31,outcome:"abandoned",
+  keys:["green","fig","herbal","fresh","natural","shampoo","salon","clean","grass"],
+  reason:"Verde paused their haircare range during a restructure. v2 passed internal review, but nobody tested stability in a high-surfactant base.",
+  formula:[["Fig leaf base",5],["cis-3-Hexenol",0.3],["Stemone",0.5],["Hedione",10],["Oakmoss absolute",0.5]],
+  versions:[["v1","Fig leaf and hexenol","Good, a bit sharp"],["v2","Stemone in, green softened","Passed internally, client paused"]],
+  src:[["verde_2024-09-03.eml","Email from Verde Salon","We're <mark>pausing the haircare range</mark> while we restructure. Please hold the fig project for now."]]},
+ {id:"KFH-2025-004",name:"Pōhutukawa Morning",client:"Aroha Skincare",year:2025,app:"body lotion",market:"New Zealand",cost:40,outcome:"won",
+  keys:["floral","fresh","citrus","premium","clean","spring","soft","woody","mid-market"],
+  reason:"Took three rounds. A trace of Javanol gave it a soft wood finish and Aroha said it stayed fresh all day.",
+  formula:[["Mandarin",5],["Rose oxide",0.2],["Hedione",15],["Javanol",0.5],["Iso E Super",8]],
+  versions:[["v1","Rose and mandarin","Too sweet"],["v2","Hedione up","Better but flat"],["v3","Javanol trace","Approved"]],
+  src:[["aroha_v3.eml","Email from Aroha Skincare","v3 is lovely. It <mark>stays fresh all day</mark> and the finish is soft."]]},
+ {id:"KFH-2022-029",name:"Amber Study",client:"Northline Home",year:2022,app:"candle",market:"Australia",cost:62,outcome:"rejected",
+  keys:["amber","warm","heavy","resin","candle","sweet","vanilla","smoky"],
+  reason:"Rejected after the burn test. Cold throw scored 2 out of 5 and cost ran 15% over.",
+  formula:[["Labdanum",4],["Vanillin",8],["Benzoin",6],["Ambrocenide",0.5]],
+  versions:[["v1","Amber resin accord","Weak cold throw, over cost"]],
+  src:[["burn_029.pdf","Burn test, Aug 2022","Cold throw: <mark>2 / 5</mark>. Hot throw acceptable."]]}
+];
+const RESTRICTED={"Lyral (HICC)":"banned under IFRA, replace before reuse","Oakmoss absolute":"IFRA restricted, check atranol limit for rinse-off","Birch tar":"IFRA restricted, use rectified grade"};
+const HEAVY=/Cedarwood|Vetiver|Patchouli|Sandalwood|Labdanum|Benzoin|Iso E Super/;
+const NATURAL=/Bergamot|Mandarin|Lemon|Jasmine|Orris|Vetiver|Grapefruit|Fig leaf/;
+const OUT={won:"Won",rejected:"Rejected",abandoned:"Abandoned",progress:"In progress"};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const touched={app:false,market:false,cost:false};
+let ranked=[],dirs=[],primaryIdx=0,openRows=new Set(),setAside={};
+
+/* brief parsing */
+const APPS=[...new Set(P.map(p=>p.app))];
+APPS.forEach(a=>{$("#fApp2").insertAdjacentHTML("beforeend",`<option>${a}</option>`);$("#fApp").insertAdjacentHTML("beforeend",`<option>${a}</option>`)});
+$("#fApp2").insertAdjacentHTML("afterbegin",`<option value="">Not stated</option>`);
+function readBrief(){
+  const lo=$("#briefText").value.toLowerCase();
+  if(!touched.app) $("#fApp2").value=APPS.find(a=>lo.includes(a))||(lo.includes("laundry")?"laundry liquid":"");
+  if(!touched.market) $("#fMarket").value=/australia/.test(lo)?"Australia":/(new zealand|nz market|wellington|auckland|christchurch)/.test(lo)?"New Zealand":"";
+  if(!touched.cost){const m=lo.match(/nz\$?\s?(\d+(?:\.\d+)?)\s*(?:\/|per)\s*kg/);$("#fCost").value=m?m[1]:"";}
+}
+function brief(){const c=parseFloat($("#fCost").value);return{lo:$("#briefText").value.toLowerCase(),app:$("#fApp2").value,market:$("#fMarket").value,cost:isNaN(c)?null:c};}
+
+function score(b){
+  return P.filter(p=>p.outcome!=="progress").map(p=>{
+    let s=0;const hits=[];
+    p.keys.forEach(k=>{if(b.lo.includes(k)){s+=2;hits.push(k)}});
+    if(b.app&&b.app===p.app){s+=7;if(!hits.includes(p.app))hits.unshift(p.app)}
+    if(b.market&&p.market===b.market)s+=1.5;
+    if(b.cost)s+=Math.max(0,2.5-Math.abs(p.cost-b.cost)/8);
+    return{p,raw:s,hits};
+  }).filter(r=>r.raw>1.5).sort((a,b)=>b.raw-a.raw).slice(0,5);
+}
+
+/* directions: real formula edits against a precedent */
+function makeDirections(top,b){
+  const wins=top.filter(r=>r.p.outcome==="won"), lost=top.find(r=>r.p.outcome!=="won");
+  if(!wins.length) return [];
+  const base=wins[0].p, second=(wins[1]||wins[0]).p;
+  const out=[];
+  out.push({title:`${base.name}, as approved`,from:[base],why:`The closest project this house won. Starting from the approved v${base.versions.length} keeps everything the client signed off on.`,rows:base.formula.map(([n,v])=>[n,v,v]),adj:0});
+  // lighter base, informed by what lost
+  const heavy=[...base.formula].filter(f=>HEAVY.test(f[0])).sort((a,b)=>b[1]-a[1])[0];
+  const rowsB=base.formula.map(([n,v])=>[n,v,heavy&&n===heavy[0]?+(v*0.67).toFixed(1):v]);
+  if(!base.formula.some(f=>f[0]==="Ambroxan")) rowsB.push(["Ambroxan",0,0.5]); else rowsB.forEach(r=>{if(r[0]==="Ambroxan")r[2]=+(r[1]+0.3).toFixed(1)});
+  out.push({title:"Lighter base",from:lost?[base,lost.p]:[base],why:lost?`${lost.p.name} was ${OUT[lost.p.outcome].toLowerCase()} because ${lost.p.reason.split(".")[0].replace(/^[A-Z]/,c=>c.toLowerCase())}. This takes ${base.name} and cuts ${heavy?heavy[0]:"the heaviest material"} by a third to stay clear of that.`:`Same structure as ${base.name} with the heaviest material cut by a third.`,rows:rowsB,adj:-0.8,extraFlags:lost?lost.p.formula.filter(f=>RESTRICTED[f[0]]).map(f=>`${f[0]} appears in ${lost.p.name}; ${RESTRICTED[f[0]]}`):[]});
+  // cost
+  const rowsC=[];let moved=0;
+  second.formula.forEach(([n,v])=>{if(NATURAL.test(n)){const nv=+(v*0.6).toFixed(1);moved+=v-nv;rowsC.push([n,v,nv])}else rowsC.push([n,v,v])});
+  if(moved>0) rowsC.push(["House citrus base KB-12",0,+moved.toFixed(1)]);
+  out.push({title:"Under the cost target",from:[second],why:`${second.name}'s structure with 40% of the naturals swapped for the house's own citrus base. Expect a flatter opening.`,rows:rowsC,adj:moved>0?-3.5:0});
+  out.forEach(d=>{
+    d.est=+(d.from[0].cost+d.adj).toFixed(1);
+    d.flags=[];
+    d.rows.forEach(r=>{if(RESTRICTED[r[0]]&&r[2]>0)d.flags.push(`${r[0]}: ${RESTRICTED[r[0]]}`)});
+    (d.extraFlags||[]).forEach(f=>d.flags.push(f));
+    if(b.cost&&d.est>b.cost)d.flags.push(`About NZ$${d.est}/kg, which is NZ$${(d.est-b.cost).toFixed(1)} over the target`);
+  });
+  return out;
+}
+
+function runRecall(){
+  const b=brief();
+  if(!b.lo.trim()){$("#results").innerHTML=`<p class="status">Paste a brief first.</p>`;return}
+  $("#results").innerHTML=`<p class="status">Searching ${P.filter(p=>p.outcome!=="progress").length} projects…</p>`;
+  setTimeout(()=>{
+    ranked=score(b);dirs=makeDirections(ranked,b);primaryIdx=0;setAside={};
+    openRows=new Set(ranked.length?[ranked[0].p.id]:[]);
+    render(b);
+  },450);
+}
+function render(b){
+  b=b||brief();
+  if(!ranked.length){$("#results").innerHTML=`<p class="status">Nothing in the archive is close to this. It's new ground for the house, so there's nothing to start from.</p>`;return}
+  const top=ranked[0].raw;
+  const rows=ranked.map(r=>{
+    const p=r.p,open=openRows.has(p.id),pct=Math.round(100*r.raw/(top+2));
+    return `<div class="row">
+      <button class="row-top" data-row="${p.id}" aria-expanded="${open}">
+        <span class="score">${pct}</span>
+        <span><span class="pname">${esc(p.name)}</span><br><span class="pmeta">${esc(p.client)}, ${p.app}, ${p.year} · <span class="num">NZ$${p.cost}/kg</span></span></span>
+        <span class="oc ${p.outcome}">${OUT[p.outcome]}</span>
+        <span class="caret">${open?"−":"+"}</span>
+      </button>
+      ${open?`<div class="row-body"><div><p>${esc(p.reason)}</p><div class="matched">Matched on ${r.hits.slice(0,5).map(h=>`<em>${esc(h)}</em>`).join(" ")}</div>
+        <div class="srcs">${p.src.map((s,j)=>`<button class="src" data-p="${p.id}" data-s="${j}">${esc(s[0])}</button>`).join("")}</div></div>
+        <ol class="vers">${p.versions.map(v=>`<li><span class="v">${v[0]}</span><span>${esc(v[1])}<br><span class="n">${esc(v[2])}</span></span></li>`).join("")}</ol></div>`:""}
+    </div>`}).join("");
+
+  let dirHtml="";
+  if(!dirs.length){dirHtml=`<p class="status">None of the close matches were won, so there's no approved formula to start from. The rejections above are still worth reading before you begin.</p>`}
+  else{
+    const d=dirs[primaryIdx];
+    const aside=setAside[primaryIdx];
+    const deltaRows=d.rows.map(([n,a,c])=>{const diff=+(c-a).toFixed(1);const cls=diff>0?"up":diff<0?"down":"same";return `<tr class="${c===0?"removed":""}"><td>${esc(n)}</td><td>${a?a.toFixed(1):"–"}</td><td>${c.toFixed(1)}</td><td class="${cls}">${diff===0?"–":(diff>0?"+":"")+diff.toFixed(1)}</td></tr>`}).join("");
+    dirHtml=`<div class="dir-wrap"><div class="primary">
+      <div class="from">Starting point ${primaryIdx+1} of ${dirs.length} · based on ${d.from.map(p=>`<button class="link" data-open="${p.id}">${esc(p.name)}</button>`).join(" and ")}</div>
+      <h3>${esc(d.title)}</h3>
+      <p style="margin:0;max-width:62ch">${esc(d.why)}</p>
+      <table class="delta"><thead><tr><th>Material</th><th>Was %</th><th>Now %</th><th>Change</th></tr></thead><tbody>${deltaRows}</tbody></table>
+      ${d.flags.length?`<ul class="flags">${d.flags.map(f=>`<li>${esc(f)}</li>`).join("")}</ul>`:`<p class="clear">No IFRA issues${b.cost?`, and about NZ$${d.est}/kg against a NZ$${b.cost} target`:""}.</p>`}
+      ${aside?`<p class="setaside">Set aside: ${esc(aside)}. <button class="link" data-undo="${primaryIdx}">Undo</button></p>`:
+      `<div class="actions"><button class="btn" data-start="${primaryIdx}">Open as a new project</button><button class="btn quiet" data-reject="${primaryIdx}">Not this one</button></div><div id="rejectBox"></div>`}
+    </div>
+    <div class="alts"><h2>Other starting points</h2><p class="hint">Partial formulas only. Nothing here goes to a client without you.</p>
+      ${dirs.map((x,i)=>i===primaryIdx?"":`<div class="alt"><b>${esc(x.title)}</b><span>From ${esc(x.from[0].name)}${setAside[i]?" · set aside":""}${x.flags.length?` · ${x.flags.length} flag${x.flags.length>1?"s":""}`:""}</span><button class="link" data-show="${i}">Look at this one</button></div>`).join("")}
+    </div></div>`;
+  }
+  $("#results").innerHTML=`<div class="ledger-head"><h2>Closest past projects</h2><p>Score is relative to this brief, not a percentage</p></div>${rows}${dirHtml}`;
+}
+
+/* source drawer */
+let lastFocus=null;
+function openSource(pid,si){
+  const p=P.find(x=>x.id===pid),s=p.src[si];lastFocus=document.activeElement;
+  $("#dTitle").textContent=s[0];$("#dMeta").textContent=`${s[1]} · ${p.name}`;$("#dBody").innerHTML=s[2];
+  $("#drawer").classList.add("open");$("#drawer").setAttribute("aria-hidden","false");$("#closeDrawer").focus();
+}
+function closeDrawer(){$("#drawer").classList.remove("open");$("#drawer").setAttribute("aria-hidden","true");if(lastFocus)lastFocus.focus()}
+function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(el._t);el._t=setTimeout(()=>el.hidden=true,3000)}
+
+/* archive */
+let selected=null;
+function renderArchive(){
+  const q=$("#q").value.toLowerCase(),o=$("#fOutcome").value,a=$("#fApp").value;
+  const rows=P.filter(p=>(!o||p.outcome===o)&&(!a||p.app===a)&&(!q||[p.name,p.client,p.reason,...p.keys,...p.formula.map(f=>f[0])].join(" ").toLowerCase().includes(q)));
+  $("#archSub").textContent=`${P.length} projects and ${P.reduce((s,p)=>s+p.versions.length,0)} versions. Click a row for its history.`;
+  $("#archBody").innerHTML=rows.map(p=>`<tr data-open="${p.id}" tabindex="0" class="${p.id===selected?"sel":""}"><td><b style="font-weight:600">${esc(p.name)}</b><div class="pmeta"><span class="num" style="font-size:11.5px">${p.id}</span> · ${esc(p.client)}</div></td><td>${p.app}</td><td class="num">${p.year}</td><td class="num">${p.cost}</td><td class="num">${p.versions.length}</td><td><span class="oc ${p.outcome}">${OUT[p.outcome]}</span></td></tr>`).join("")||`<tr><td colspan="6" style="color:var(--muted)">Nothing matches that search.</td></tr>`;
+}
+function showProject(id){
+  const p=P.find(x=>x.id===id);selected=id;go("archive");renderArchive();
+  $("#archDetail").innerHTML=`<div class="detail">
+    <div style="min-width:0"><div class="crumb num">${p.id} · ${p.year} · ${esc(p.client)}</div><h1>${esc(p.name)}</h1>
+      <p class="sub" style="color:var(--ink)">${esc(p.reason)}</p>
+      <ol class="vers" style="margin-top:14px;font-size:13px">${p.versions.map(v=>`<li><span class="v">${v[0]}</span><span>${esc(v[1])}<br><span class="n">${esc(v[2])}</span></span></li>`).join("")}</ol></div>
+    <div style="min-width:0"><h2>Formula at v${p.versions.length}</h2>
+      <table class="f">${p.formula.map(([n,v])=>`<tr><td>${esc(n)}${RESTRICTED[n]?`<span class="ifra" title="${esc(RESTRICTED[n])}">IFRA</span>`:""}</td><td>${v.toFixed(1)}%</td></tr>`).join("")}</table>
+      ${p.src.length?`<h2 style="margin-top:20px">Records</h2><div class="srcs">${p.src.map((s,j)=>`<button class="src" data-p="${p.id}" data-s="${j}">${esc(s[0])}</button>`).join("")}</div>`:""}</div>
+  </div>`;
+  $("#archDetail").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+/* ingest */
+const SAMPLE_FILES=[["Formulas_2019-2025.xlsx","118 formulas matched to 96 projects by code"],["costing_master_v12.xlsx","Costs attached to 88 formulas"],["client_emails.mbox","412 emails, 301 linked to a project"],["eval_notes_2023.pdf","64 evaluation notes, dated and linked"],["Briefs (46 files)","46 briefs, 44 linked"],["sample_log.csv","530 sample sends, 3 with no matching formula"]];
+const REVIEW=[
+ ["Email from J. Park, 14 Aug 2023: \"the citrus one is close but heavier than we'd like\"","Two citrus projects were live that month. Link to Driftwood Citrus?","KFH-2023-041"],
+ ["Formula KFH-019b with no brief attached","Name and date suggest Salt & Vetiver, round one. Link it?","KFH-2022-017"],
+ ["Evaluation note \"fig v3, too sharp at 1h\"","The archive only has v1 and v2 of Fig Leaf Clean. Add as v3?","KFH-2024-021"]
+];
+function ingest(files){
+  const list=$("#ingestList");$("#ingestResult").innerHTML="";
+  list.innerHTML=files.map(f=>`<div class="frow"><span class="fn">${esc(f[0])}</span><span class="st">Waiting</span><span class="out"></span></div>`).join("");
+  [...list.children].forEach((row,i)=>{
+    const st=row.children[1],out=row.children[2];
+    setTimeout(()=>st.textContent="Reading",250+i*380);
+    setTimeout(()=>{st.textContent="Done";st.classList.add("done");out.textContent=files[i][1]},1000+i*380);
+  });
+  setTimeout(()=>{
+    $("#ingestResult").innerHTML=`<p class="summary">Rebuilt 142 projects from these files. Most records linked on formula code or date. These ${REVIEW.length} need someone who was there to confirm.</p>
+    <div class="review">${REVIEW.map((r,i)=>`<div class="ritem" id="rv${i}"><div><p>${esc(r[0])}</p><p class="q">${esc(r[1])}</p></div><div class="actions" style="margin:0"><button class="btn quiet" data-confirm="${i}">Yes, link it</button><button class="link" data-skip="${i}">Leave unlinked</button></div></div>`).join("")}</div>`;
+  },1100+files.length*380);
+}
+
+/* learn */
+function fillCapProj(sel){
+  $("#capProj").innerHTML=P.map(p=>`<option value="${p.id}">${esc(p.name)}${p.outcome==="progress"?" (in progress)":""}</option>`).join("");
+  if(sel)$("#capProj").value=sel;renderCap();
+}
+function renderCap(){
+  const p=P.find(x=>x.id===$("#capProj").value);
+  $("#capTitle").textContent=`${p.name} so far`;
+  $("#capTimeline").innerHTML=p.versions.map(v=>`<li><span class="v">${v[0]}</span><span>${esc(v[1])}<br><span class="n">${esc(v[2])}</span></span></li>`).join("");
+}
+
+/* nav */
+function go(v){
+  document.querySelectorAll(".view").forEach(s=>s.hidden=s.id!=="v-"+v);
+  document.querySelectorAll(".nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.view===v));
+  try{localStorage.setItem("memoire-view",v)}catch(e){}
+}
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>go(b.dataset.view));
+
+let draftN=1;
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button,tr");if(!t)return;
+  const d=t.dataset;
+  if(t.matches(".src"))return openSource(d.p,+d.s);
+  if(d.row){openRows.has(d.row)?openRows.delete(d.row):openRows.add(d.row);return render()}
+  if(d.open)return showProject(d.open);
+  if(d.sample){$("#briefText").value=SAMPLES[+d.sample];Object.keys(touched).forEach(k=>touched[k]=false);readBrief();return runRecall()}
+  if(d.show){primaryIdx=+d.show;render();return $(".primary").scrollIntoView({behavior:"smooth",block:"nearest"})}
+  if(d.undo!==undefined){delete setAside[+d.undo];return render()}
+  if(d.reject!==undefined){
+    $("#rejectBox").innerHTML=`<div class="setaside"><label for="rr">Why?</label><select id="rr"><option>Too heavy</option><option>Wrong family for this brief</option><option>Can't hit the cost</option><option>Client has heard this before</option></select><button class="btn quiet" data-reason="${d.reject}">Set aside</button><button class="link" data-cancel>Cancel</button></div>`;return}
+  if(d.cancel!==undefined){$("#rejectBox").innerHTML="";return}
+  if(d.reason!==undefined){setAside[+d.reason]=$("#rr").value;render();return toast("Noted. The reason is saved against this brief.")}
+  if(d.start!==undefined){
+    const dir=dirs[+d.start],b=brief();
+    const id=`KFH-2026-${String(50+draftN++).padStart(3,"0")}`;
+    const name=`New ${b.app||"brief"}${b.market?", "+b.market:""}`;
+    P.push({id,name,client:"Not yet entered",year:2026,app:b.app||"unspecified",market:b.market||"",cost:dir.est,outcome:"progress",keys:[],reason:"Started from Mémoire. "+$("#briefText").value,
+      formula:dir.rows.filter(r=>r[2]>0).map(r=>[r[0],r[2]]),versions:[["v1",`Started from "${dir.title}" (${dir.from[0].id})`,"Not sent to the client yet"]],src:[]});
+    renderArchive();fillCapProj(id);go("capture");
+    return toast(`${name} created as ${id}. Log each version here as you go.`);
+  }
+  if(d.confirm!==undefined){const r=REVIEW[+d.confirm];$("#rv"+d.confirm).querySelector(".actions").outerHTML=`<span class="done">Linked to ${r[2]}</span>`;return}
+  if(d.skip!==undefined){$("#rv"+d.skip).querySelector(".actions").outerHTML=`<span class="pmeta">Left unlinked. It stays searchable.</span>`;return}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();if(e.key==="Enter"&&e.target.matches("tr[data-open]"))showProject(e.target.dataset.open)});
+$("#closeDrawer").onclick=closeDrawer;
+$("#runRecall").onclick=runRecall;
+$("#briefText").addEventListener("input",readBrief);
+[["fApp2","app"],["fMarket","market"],["fCost","cost"]].forEach(([id,k])=>$("#"+id).addEventListener("input",()=>{touched[k]=true;$("#autoNote").textContent="Edited by you."}));
+["q","fOutcome","fApp"].forEach(id=>$("#"+id).addEventListener("input",renderArchive));
+$("#sampleIngest").onclick=()=>ingest(SAMPLE_FILES);
+$("#fileIn").onchange=e=>ingest([...e.target.files].map(f=>[f.name,"Read. In the real product this would link to projects."]));
+const drop=$("#drop");
+drop.addEventListener("dragover",e=>{e.preventDefault();drop.classList.add("over")});
+drop.addEventListener("dragleave",()=>drop.classList.remove("over"));
+drop.addEventListener("drop",e=>{e.preventDefault();drop.classList.remove("over");ingest([...e.dataTransfer.files].map(f=>[f.name,"Read. In the real product this would link to projects."]))});
+$("#capProj").onchange=renderCap;
+$("#capForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const p=P.find(x=>x.id===$("#capProj").value);
+  const change=$("#capChange").value.trim();
+  if(!change){toast("Say what changed before saving.");return $("#capChange").focus()}
+  const cost=$("#capCost").value.trim();
+  p.versions.push(["v"+(p.versions.length+1),change+(cost?` (NZ$${cost}/kg)`:""),$("#capClient").value.trim()||"No client feedback yet"]);
+  renderCap();renderArchive();toast(`Saved v${p.versions.length} of ${p.name}.`);
+});
+
+readBrief();fillCapProj();renderArchive();
+ranked=score(brief());dirs=makeDirections(ranked,brief());openRows=new Set(ranked.length?[ranked[0].p.id]:[]);render();
+try{const v=localStorage.getItem("memoire-view");if(v&&document.getElementById("v-"+v))go(v)}catch(e){}
+</script>
+
 </body>
 </html>
