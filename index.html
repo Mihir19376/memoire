@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mémoire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&display=swap">
+<style>
+  :root {
+    --bg: #ECE9EF;
+    --fg: #2A2230;
+    --haze-a: #D9CBE3;
+    --haze-b: #E8D9D3;
+    --haze-c: #CFD8E4;
+    --display: "Italiana", "Didot", "Bodoni 72", "Times New Roman", serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17121B; --fg: #EDE6F0;
+      --haze-a: #3A2945; --haze-b: #3B2B2A; --haze-c: #22303F;
+      color-scheme: dark;
+    }
+  }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    padding-inline: 16px;
+  }
+  .haze { position: fixed; inset: -20%; pointer-events: none; filter: blur(80px); opacity: .9; }
+  .haze span { position: absolute; border-radius: 50%; width: 55vmax; height: 55vmax; }
+  .haze span:nth-child(1) { background: var(--haze-a); top: 10%; left: 5%; animation: drift 26s ease-in-out infinite alternate; }
+  .haze span:nth-child(2) { background: var(--haze-b); top: 35%; left: 40%; animation: drift 32s ease-in-out infinite alternate-reverse; }
+  .haze span:nth-child(3) { background: var(--haze-c); top: 0; left: 50%; animation: drift 38s ease-in-out infinite alternate; }
+  @keyframes drift {
+    from { transform: translate(0, 0) scale(1); }
+    to   { transform: translate(8vmax, 6vmax) scale(1.15); }
+  }
+  h1 {
+    position: relative;
+    margin: 0;
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(3rem, 13vw, 9rem);
+    letter-spacing: .14em;
+    padding-left: .14em;
+    text-transform: uppercase;
+    text-align: center;
+    animation: arrive 2.4s cubic-bezier(.2,.7,.2,1) both;
+  }
+  @keyframes arrive {
+    from { letter-spacing: .4em; opacity: .25; filter: blur(6px); }
+    to   { letter-spacing: .14em; opacity: 1; filter: blur(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .haze span, h1 { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="haze" aria-hidden="true"><span></span><span></span><span></span></div>
+<h1>Mémoire</h1>
+</body>
+</html>
